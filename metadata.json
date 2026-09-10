@@ -1,0 +1,6 @@
+{
+  "name": "Children's Coloring Game",
+  "description": "An interactive, playful coloring game for kids with fill buckets, brush and marker tools, fun stickers, sound effects, and coloring pages.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

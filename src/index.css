@@ -1,0 +1,28 @@
+@import "tailwindcss";
+
+@media print {
+  body {
+    background: white !important;
+  }
+  #app-header,
+  #main-toolbar,
+  #color-palette-container,
+  footer,
+  .no-print {
+    display: none !important;
+  }
+  #coloring-canvas-wrapper {
+    box-shadow: none !important;
+    border: 2px solid #000 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    height: auto !important;
+  }
+}
+
+/* Kid drawing optimizations */
+canvas, svg {
+  touch-action: none;
+  -webkit-touch-callout: none;
+}
+
