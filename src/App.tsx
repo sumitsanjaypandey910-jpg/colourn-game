@@ -19,7 +19,7 @@ import { Sparkles, HelpCircle } from 'lucide-react';
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState<ColoringPage>(COLORING_PAGES[0]);
-  const [activeTool, setActiveTool] = useState<ToolType>('bucket');
+  const [activeTool, setActiveTool] = useState<ToolType>('brush');
   const [selectedColor, setSelectedColor] = useState<string>(COLOR_OPTIONS[0].value);
   const [brushSize, setBrushSize] = useState<BrushSize>(14);
   const [selectedSticker, setSelectedSticker] = useState<StickerItem | null>(STICKER_ITEMS[0]);
@@ -200,9 +200,12 @@ export default function App() {
         ctx.drawImage(img, 0, 0, 1200, 900);
         URL.revokeObjectURL(blobURL);
 
-        // 2. Draw freehand drawing canvas layer
+        // 2. Draw freehand drawing canvas layer with multiply blend mode
         if (canvasRef.current) {
+          ctx.save();
+          ctx.globalCompositeOperation = 'multiply';
           ctx.drawImage(canvasRef.current, 0, 0, 1200, 900);
+          ctx.restore();
         }
 
         // 3. Draw stickers
@@ -253,19 +256,16 @@ export default function App() {
     window.print();
   };
 
-  // Colored parts count for objective feedback
-  const coloredCount = Object.values(svgFills).filter(
-    (c: string) => Boolean(c) && c.toUpperCase() !== '#FFFFFF'
-  ).length;
-  const isColourless = coloredCount === 0 && strokes.length === 0 && stickers.length === 0;
+  // Player progress & coloring count
+  const strokesCount = strokes.length;
+  const stickersCount = stickers.length;
+  const isColourless = strokesCount === 0 && stickersCount === 0;
 
   // Kid guidance text based on active tool
   const getToolGuidance = () => {
     switch (activeTool) {
-      case 'bucket':
-        return '👉 Tap any shape or section of the picture to magically fill it with color!';
       case 'brush':
-        return '🖍️ Draw, doodle, and color freely on the page with your crayon!';
+        return '🖍️ Draw, doodle, and color inside the picture using your crayon!';
       case 'rainbow':
         return '🌈 Draw glowing rainbow strokes that change color as you paint!';
       case 'sparkle':
@@ -273,9 +273,9 @@ export default function App() {
       case 'sticker':
         return `⭐ Tap anywhere on your picture to stamp the ${selectedSticker?.name || 'sticker'}!`;
       case 'eraser':
-        return '🧽 Drag over crayon lines to erase them!';
+        return '🧽 Drag over crayon lines to erase and clean up!';
       default:
-        return 'Pick a color and have fun!';
+        return 'Pick a crayon color and start coloring!';
     }
   };
 
@@ -329,11 +329,11 @@ export default function App() {
             <div>
               {isColourless ? (
                 <span>
-                  <strong className="text-amber-900 font-black">First Objective:</strong> This picture starts colourless! Pick a color and tap shapes or draw with crayons to add your colors!
+                  <strong className="text-amber-900 font-black">First Objective:</strong> This picture starts colourless! Pick a crayon or rainbow brush to color in the design!
                 </span>
               ) : (
                 <span>
-                  <strong className="text-amber-900 font-black">Unlimited Coloring Mode:</strong> {coloredCount} parts colored! Keep drawing, filling, and stamping freely!
+                  <strong className="text-amber-900 font-black">Unlimited Coloring:</strong> {strokesCount} crayon strokes & {stickersCount} stickers added! Keep coloring freely!
                 </span>
               )}
             </div>
@@ -346,7 +346,7 @@ export default function App() {
               </span>
             ) : (
               <span className="px-3 py-1 rounded-full bg-emerald-100 border border-emerald-300 text-emerald-800 font-extrabold text-xs shadow-2xs flex items-center gap-1">
-                <span>🎨 {coloredCount} parts colored</span>
+                <span>🎨 {strokesCount} strokes • {stickersCount} stickers</span>
               </span>
             )}
             <span className="px-2.5 py-1 rounded-full bg-amber-200/90 border border-amber-300 text-amber-950 font-bold text-xs">

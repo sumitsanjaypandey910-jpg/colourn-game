@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 
-export type ToolType = 'bucket' | 'brush' | 'rainbow' | 'sparkle' | 'sticker' | 'eraser';
+export type ToolType = 'brush' | 'rainbow' | 'sparkle' | 'sticker' | 'eraser';
 
 export type BrushSize = 6 | 14 | 26 | 44;
 

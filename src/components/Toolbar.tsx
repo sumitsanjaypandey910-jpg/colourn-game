@@ -2,7 +2,6 @@ import React from 'react';
 import { ToolType, BrushSize } from '../types';
 import { sounds } from '../utils/audio';
 import { 
-  PaintBucket, 
   Paintbrush, 
   Sparkles, 
   Smile, 
@@ -52,25 +51,6 @@ export const Toolbar: React.FC<ToolbarProps> = ({
     <div id="main-toolbar" className="flex flex-wrap items-center justify-between gap-2.5 bg-white/95 backdrop-blur-sm p-3 rounded-2xl shadow-md border-2 border-amber-200">
       {/* Primary Drawing Tools */}
       <div id="drawing-tools-group" className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-1 sm:pb-0">
-        {/* Magic Bucket */}
-        <button
-          id="tool-bucket-btn"
-          type="button"
-          onClick={() => {
-            sounds.playPop();
-            setActiveTool('bucket');
-          }}
-          className={`flex items-center gap-1.5 px-3 py-2 rounded-xl font-bold text-xs sm:text-sm transition-all ${
-            activeTool === 'bucket'
-              ? 'bg-amber-400 text-amber-950 shadow-inner scale-105 border-2 border-amber-500'
-              : 'bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200'
-          }`}
-          title="Magic Fill (Tap closed shapes to fill with color!)"
-        >
-          <PaintBucket className="w-4 h-4 sm:w-5 sm:h-5 text-amber-700" />
-          <span>Magic Fill</span>
-        </button>
-
         {/* Crayon Brush */}
         <button
           id="tool-brush-btn"
@@ -173,7 +153,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
       {/* Brush Size & Canvas Action Controls */}
       <div id="size-actions-group" className="flex items-center gap-2 sm:gap-3 flex-wrap">
         {/* Brush Size Picker (only when using brushes or eraser) */}
-        {activeTool !== 'bucket' && activeTool !== 'sticker' && (
+        {activeTool !== 'sticker' && (
           <div className="flex items-center gap-1 px-2 py-1 bg-amber-50 rounded-xl border border-amber-200">
             <span className="text-[11px] font-bold text-amber-800 mr-1 hidden sm:inline">Size:</span>
             {BRUSH_SIZES.map((b) => (

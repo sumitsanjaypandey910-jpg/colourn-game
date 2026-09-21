@@ -1,31 +1,25 @@
 import React from 'react';
 import { ColoringPage } from '../types';
 
-// Helper for clickable SVG parts
+// Helper for SVG line art parts - completely colourless (#FFFFFF) for players to add their own colours
 const createPart = (
   id: string,
   Tag: 'path' | 'circle' | 'ellipse' | 'rect' | 'polygon',
   props: React.SVGProps<SVGElement>,
-  fills: Record<string, string>,
-  onSectionClick: (id: string) => void,
+  _fills?: Record<string, string>,
+  _onSectionClick?: (id: string) => void,
   _defaultFill: string = '#FFFFFF'
 ) => {
-  // First objective is always 100% colourless (#FFFFFF) line-art so players add colours to it
-  const currentFill = fills[id] || '#FFFFFF';
   return React.createElement(Tag, {
     ...props,
     key: id,
     id: `part-${id}`,
-    fill: currentFill,
+    fill: '#FFFFFF',
     stroke: '#1e293b',
     strokeWidth: props.strokeWidth !== undefined ? props.strokeWidth : 3.5,
     strokeLinecap: 'round',
     strokeLinejoin: 'round',
-    onClick: (e: React.MouseEvent) => {
-      e.stopPropagation();
-      onSectionClick(id);
-    },
-    className: 'cursor-pointer transition-colors duration-150 hover:brightness-95 active:scale-[0.99] origin-center',
+    className: 'pointer-events-none select-none',
   });
 };
 

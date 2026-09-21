@@ -148,38 +148,12 @@ export const CanvasArea: React.FC<CanvasAreaProps> = ({
     renderAllStrokes();
   }, [renderAllStrokes]);
 
-  // Section click handler (when in Magic Fill / Bucket mode)
-  const handleSectionClick = (sectionId: string) => {
-    if (activeTool !== 'bucket') return;
-
-    sounds.playPop();
-    const newFills = { ...svgFills, [sectionId]: selectedColor };
-    onSvgFillChange(newFills);
-
-    // Trigger visual pop sparkle
-    if (canvasContainerRef.current) {
-      const el = document.getElementById(`part-${sectionId}`);
-      if (el) {
-        const bbox = el.getBoundingClientRect();
-        const contRect = canvasContainerRef.current.getBoundingClientRect();
-        const cx = (bbox.left + bbox.width / 2 - contRect.left) * (800 / contRect.width);
-        const cy = (bbox.top + bbox.height / 2 - contRect.top) * (600 / contRect.height);
-        triggerSparkleBurst(cx, cy);
-      }
-    }
-  };
-
   // Drawing event handlers
   const handlePointerDown = (e: React.PointerEvent) => {
     // If clicking on a sticker while not in sticker tool, we can select/drag it
     if (draggingStickerId) return;
 
     const coords = getCanvasCoordinates(e);
-
-    if (activeTool === 'bucket') {
-      // Handled by SVG section click
-      return;
-    }
 
     if (activeTool === 'sticker' && selectedSticker) {
       sounds.playStickerStamp();
@@ -316,15 +290,15 @@ export const CanvasArea: React.FC<CanvasAreaProps> = ({
         onPointerUp={handlePointerUp}
         onPointerLeave={handlePointerUp}
       >
-        {/* Layer 1: Base SVG Line Art with Clickable Color Regions */}
+        {/* Layer 1: Base SVG Line Art - 100% colourless outlines ready for player coloring */}
         <svg
           ref={svgRef}
           id="coloring-svg-layer"
           viewBox={page.viewBox}
-          className="absolute inset-0 w-full h-full pointer-events-auto"
+          className="absolute inset-0 w-full h-full pointer-events-none select-none"
           preserveAspectRatio="xMidYMid meet"
         >
-          {page.renderSvg(svgFills, handleSectionClick)}
+          {page.renderSvg(svgFills)}
         </svg>
 
         {/* Layer 2: Freehand Drawing HTML5 Canvas */}
@@ -333,9 +307,7 @@ export const CanvasArea: React.FC<CanvasAreaProps> = ({
           id="freehand-drawing-canvas"
           width={800}
           height={600}
-          className={`absolute inset-0 w-full h-full pointer-events-none ${
-            activeTool === 'bucket' ? 'opacity-90' : 'opacity-100'
-          }`}
+          className="absolute inset-0 w-full h-full pointer-events-none mix-blend-multiply"
         />
 
         {/* Layer 3: Interactive Placed Stickers */}
