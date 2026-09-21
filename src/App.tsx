@@ -100,14 +100,13 @@ export default function App() {
     }
   };
 
-  // Reset/Clear canvas for this page
+  // Reset/Clear canvas for this page back to colourless objective
   const handleClear = () => {
-    if (window.confirm('Do you want to reset this page and start fresh?')) {
-      setSvgFills({});
-      setStrokes([]);
-      setStickers([]);
-      pushHistory({}, [], []);
-    }
+    sounds.playSwoosh();
+    setSvgFills({});
+    setStrokes([]);
+    setStickers([]);
+    pushHistory({}, [], []);
   };
 
   // Switch Coloring Page
@@ -244,8 +243,8 @@ export default function App() {
         document.body.removeChild(downloadLink);
       };
       img.src = blobURL;
-    } catch {
-      alert('Could not download image. Please try again!');
+    } catch (err) {
+      console.error('Could not download image:', err);
     }
   };
 
@@ -253,6 +252,12 @@ export default function App() {
   const handlePrint = () => {
     window.print();
   };
+
+  // Colored parts count for objective feedback
+  const coloredCount = Object.values(svgFills).filter(
+    (c: string) => Boolean(c) && c.toUpperCase() !== '#FFFFFF'
+  ).length;
+  const isColourless = coloredCount === 0 && strokes.length === 0 && stickers.length === 0;
 
   // Kid guidance text based on active tool
   const getToolGuidance = () => {
@@ -312,8 +317,46 @@ export default function App() {
           selectedSticker={selectedSticker}
         />
 
+        {/* Objective Tracker & Unlimited Coloring Banner */}
+        <div 
+          id="objective-banner" 
+          className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 bg-gradient-to-r from-amber-100 via-orange-100/80 to-yellow-100 border-2 border-amber-300 px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-black text-amber-950 shadow-xs"
+        >
+          <div className="flex items-center gap-2">
+            <span className="text-lg sm:text-xl select-none animate-bounce">
+              {isColourless ? '🎯' : '🌟'}
+            </span>
+            <div>
+              {isColourless ? (
+                <span>
+                  <strong className="text-amber-900 font-black">First Objective:</strong> This picture starts colourless! Pick a color and tap shapes or draw with crayons to add your colors!
+                </span>
+              ) : (
+                <span>
+                  <strong className="text-amber-900 font-black">Unlimited Coloring Mode:</strong> {coloredCount} parts colored! Keep drawing, filling, and stamping freely!
+                </span>
+              )}
+            </div>
+          </div>
+
+          <div className="flex items-center gap-1.5 self-end sm:self-auto shrink-0">
+            {isColourless ? (
+              <span className="px-3 py-1 rounded-full bg-white/90 border border-amber-400 text-amber-900 font-extrabold text-xs shadow-2xs">
+                Colourless Picture
+              </span>
+            ) : (
+              <span className="px-3 py-1 rounded-full bg-emerald-100 border border-emerald-300 text-emerald-800 font-extrabold text-xs shadow-2xs flex items-center gap-1">
+                <span>🎨 {coloredCount} parts colored</span>
+              </span>
+            )}
+            <span className="px-2.5 py-1 rounded-full bg-amber-200/90 border border-amber-300 text-amber-950 font-bold text-xs">
+              Unlimited
+            </span>
+          </div>
+        </div>
+
         {/* Active Tool Tip / Instruction Banner for Kids */}
-        <div className="bg-amber-100/90 border border-amber-300 px-4 py-2 rounded-2xl flex items-center justify-between text-xs sm:text-sm font-black text-amber-950 shadow-xs">
+        <div className="bg-white/80 border border-amber-200 px-4 py-2 rounded-xl flex items-center justify-between text-xs sm:text-sm font-bold text-amber-900 shadow-2xs">
           <div className="flex items-center gap-2">
             <span className="text-base sm:text-lg">💡</span>
             <span>{getToolGuidance()}</span>

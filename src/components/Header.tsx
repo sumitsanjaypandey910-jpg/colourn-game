@@ -37,9 +37,14 @@ export const Header: React.FC<HeaderProps> = ({
           🎨
         </div>
         <div>
-          <h1 className="text-lg sm:text-xl font-black text-amber-950 tracking-tight leading-none flex items-center gap-1.5">
-            Kids Coloring Book
-          </h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-lg sm:text-xl font-black text-amber-950 tracking-tight leading-none">
+              Kids Coloring Book
+            </h1>
+            <span className="px-2 py-0.5 bg-gradient-to-r from-amber-200 to-yellow-300 border border-amber-400 text-amber-950 text-[10px] sm:text-xs font-black rounded-full uppercase tracking-wider shadow-2xs">
+              Unlimited
+            </span>
+          </div>
           <p className="text-xs font-semibold text-amber-800/80 mt-0.5">
             Coloring: <span className="font-extrabold text-amber-900 underline decoration-amber-300">{currentPageTitle}</span>
           </p>

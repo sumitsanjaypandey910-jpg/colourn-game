@@ -40,7 +40,7 @@ export const PageSelector: React.FC<PageSelectorProps> = ({
                 Choose a Coloring Page!
               </h2>
               <p className="text-xs sm:text-sm font-semibold text-amber-800">
-                Pick your favorite adventure to color and decorate!
+                Pick your favorite adventure! All pages start colourless for unlimited creative coloring.
               </p>
             </div>
           </div>
