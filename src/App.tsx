@@ -15,7 +15,6 @@ import { StickerPicker } from './components/StickerPicker';
 import { PageSelector } from './components/PageSelector';
 import { StickerItem, STICKER_ITEMS } from './data/stickers';
 import { sounds, music } from './utils/audio';
-import { Sparkles, HelpCircle } from 'lucide-react';
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState<ColoringPage>(COLORING_PAGES[0]);
@@ -30,6 +29,19 @@ export default function App() {
   // Modals
   const [isStickerPickerOpen, setIsStickerPickerOpen] = useState(false);
   const [isPageSelectorOpen, setIsPageSelectorOpen] = useState(false);
+
+  // Mobile portrait orientation detector
+  const [isPortrait, setIsPortrait] = useState<boolean>(false);
+  const [showRotateTip, setShowRotateTip] = useState<boolean>(true);
+
+  useEffect(() => {
+    const checkOrientation = () => {
+      setIsPortrait(window.innerHeight > window.innerWidth && window.innerWidth < 768);
+    };
+    checkOrientation();
+    window.addEventListener('resize', checkOrientation);
+    return () => window.removeEventListener('resize', checkOrientation);
+  }, []);
 
   // Canvas State
   const [svgFills, setSvgFills] = useState<Record<string, string>>({});
@@ -261,43 +273,57 @@ export default function App() {
   const stickersCount = stickers.length;
   const isColourless = strokesCount === 0 && stickersCount === 0;
 
-  // Kid guidance text based on active tool
-  const getToolGuidance = () => {
-    switch (activeTool) {
-      case 'brush':
-        return '🖍️ Draw, doodle, and color inside the picture using your crayon!';
-      case 'rainbow':
-        return '🌈 Draw glowing rainbow strokes that change color as you paint!';
-      case 'sparkle':
-        return '✨ Draw magical sparkle trails with glittering stars!';
-      case 'sticker':
-        return `⭐ Tap anywhere on your picture to stamp the ${selectedSticker?.name || 'sticker'}!`;
-      case 'eraser':
-        return '🧽 Drag over crayon lines to erase and clean up!';
-      default:
-        return 'Pick a crayon color and start coloring!';
-    }
-  };
-
   return (
-    <div className="min-h-screen bg-gradient-to-b from-amber-50 via-orange-50/40 to-yellow-50/60 p-2 sm:p-4 md:p-6 flex flex-col justify-between">
-      <div className="max-w-5xl mx-auto w-full space-y-3 sm:space-y-4">
-        {/* Header with Title & Action Controls */}
-        <Header
-          soundEnabled={soundEnabled}
-          onToggleSound={handleToggleSound}
-          musicPlaying={musicPlaying}
-          onToggleMusic={handleToggleMusic}
-          musicVolume={musicVolume}
-          onMusicVolumeChange={handleMusicVolumeChange}
-          onCelebrate={handleCelebrate}
-          onDownload={handleDownload}
-          onPrint={handlePrint}
-          onOpenPageSelector={() => setIsPageSelectorOpen(true)}
-          currentPageTitle={currentPage.title}
-        />
+    <div
+      id="coloring-app-root"
+      className="h-screen h-[100dvh] w-screen overflow-hidden bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-100 flex flex-col p-1 sm:p-2 select-none font-sans text-amber-950"
+    >
+      {/* Mobile Portrait Orientation Helper */}
+      {isPortrait && showRotateTip && (
+        <div className="shrink-0 bg-amber-400 border border-amber-500 text-amber-950 px-2.5 py-1 text-xs font-black rounded-lg flex items-center justify-between mb-1 shadow-xs animate-pulse">
+          <div className="flex items-center gap-1.5 truncate">
+            <span>🔄</span>
+            <span className="truncate">Rotate phone sideways for the BIGGEST coloring canvas!</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setShowRotateTip(false)}
+            className="text-amber-950 text-xs px-1.5 py-0.5 ml-2 hover:bg-amber-500 rounded font-bold"
+            title="Dismiss"
+          >
+            ✕
+          </button>
+        </div>
+      )}
 
-        {/* Toolbar (Tools, Brush Sizes, Undo/Redo, Clear) */}
+      {/* Sleek Top Header Bar */}
+      <Header
+        soundEnabled={soundEnabled}
+        onToggleSound={handleToggleSound}
+        musicPlaying={musicPlaying}
+        onToggleMusic={handleToggleMusic}
+        musicVolume={musicVolume}
+        onMusicVolumeChange={handleMusicVolumeChange}
+        onCelebrate={handleCelebrate}
+        onDownload={handleDownload}
+        onPrint={handlePrint}
+        onOpenPageSelector={() => setIsPageSelectorOpen(true)}
+        currentPageTitle={currentPage.title}
+        onUndo={handleUndo}
+        onRedo={handleRedo}
+        canUndo={historyIndex > 0}
+        canRedo={historyIndex < history.length - 1}
+        onClear={handleClear}
+        isColourless={isColourless}
+        strokesCount={strokesCount}
+      />
+
+      {/* Main Horizontal Game Stage: Left Tools + Center Big Canvas + Right Colors */}
+      <div
+        id="game-horizontal-stage"
+        className="flex-1 min-h-0 w-full flex flex-row items-stretch gap-1 sm:gap-2 mt-1 sm:mt-1.5 overflow-hidden"
+      >
+        {/* Left Toolbar (Tools & Brush Sizes) */}
         <Toolbar
           activeTool={activeTool}
           setActiveTool={(tool) => {
@@ -308,71 +334,11 @@ export default function App() {
           }}
           brushSize={brushSize}
           setBrushSize={setBrushSize}
-          onUndo={handleUndo}
-          onRedo={handleRedo}
-          canUndo={historyIndex > 0}
-          canRedo={historyIndex < history.length - 1}
-          onClear={handleClear}
           onOpenStickerPicker={() => setIsStickerPickerOpen(true)}
           selectedSticker={selectedSticker}
         />
 
-        {/* Objective Tracker & Unlimited Coloring Banner */}
-        <div 
-          id="objective-banner" 
-          className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 bg-gradient-to-r from-amber-100 via-orange-100/80 to-yellow-100 border-2 border-amber-300 px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-black text-amber-950 shadow-xs"
-        >
-          <div className="flex items-center gap-2">
-            <span className="text-lg sm:text-xl select-none animate-bounce">
-              {isColourless ? '🎯' : '🌟'}
-            </span>
-            <div>
-              {isColourless ? (
-                <span>
-                  <strong className="text-amber-900 font-black">First Objective:</strong> This picture starts colourless! Pick a crayon or rainbow brush to color in the design!
-                </span>
-              ) : (
-                <span>
-                  <strong className="text-amber-900 font-black">Unlimited Coloring:</strong> {strokesCount} crayon strokes & {stickersCount} stickers added! Keep coloring freely!
-                </span>
-              )}
-            </div>
-          </div>
-
-          <div className="flex items-center gap-1.5 self-end sm:self-auto shrink-0">
-            {isColourless ? (
-              <span className="px-3 py-1 rounded-full bg-white/90 border border-amber-400 text-amber-900 font-extrabold text-xs shadow-2xs">
-                Colourless Picture
-              </span>
-            ) : (
-              <span className="px-3 py-1 rounded-full bg-emerald-100 border border-emerald-300 text-emerald-800 font-extrabold text-xs shadow-2xs flex items-center gap-1">
-                <span>🎨 {strokesCount} strokes • {stickersCount} stickers</span>
-              </span>
-            )}
-            <span className="px-2.5 py-1 rounded-full bg-amber-200/90 border border-amber-300 text-amber-950 font-bold text-xs">
-              Unlimited
-            </span>
-          </div>
-        </div>
-
-        {/* Active Tool Tip / Instruction Banner for Kids */}
-        <div className="bg-white/80 border border-amber-200 px-4 py-2 rounded-xl flex items-center justify-between text-xs sm:text-sm font-bold text-amber-900 shadow-2xs">
-          <div className="flex items-center gap-2">
-            <span className="text-base sm:text-lg">💡</span>
-            <span>{getToolGuidance()}</span>
-          </div>
-          {activeTool === 'sticker' && selectedSticker && (
-            <button
-              type="button"
-              onClick={() => setIsStickerPickerOpen(true)}
-              className="text-xs font-black underline hover:text-amber-700 ml-2"
-            >
-              Change Sticker
-            </button>
-          )}
-        </div>
-
-        {/* Interactive Canvas Area */}
+        {/* Center: Big Coloring Canvas Area */}
         <CanvasArea
           page={currentPage}
           activeTool={activeTool}
@@ -390,12 +356,11 @@ export default function App() {
           canvasRef={canvasRef}
         />
 
-        {/* Crayon Color Palette */}
+        {/* Right: Colors Palette Dock (2-columns, all 16 colors visible, NO SCROLLING!) */}
         <ColorPalette
           selectedColor={selectedColor}
           onSelectColor={(color) => {
             setSelectedColor(color);
-            // If currently in eraser or sticker, switch back to bucket or brush for immediate coloring convenience
             if (activeTool === 'eraser') {
               setActiveTool('brush');
             }
@@ -403,14 +368,7 @@ export default function App() {
         />
       </div>
 
-      {/* Footer watermark & reassurance */}
-      <footer className="mt-6 text-center text-xs font-bold text-amber-900/60 pb-2 flex items-center justify-center gap-1">
-        <span>Made for creative kids & toddlers</span>
-        <span>•</span>
-        <span>Tap Tada! 🎉 anytime to celebrate your art</span>
-      </footer>
-
-      {/* Sticker Picker Modal */}
+      {/* Modals */}
       <StickerPicker
         selectedSticker={selectedSticker}
         onSelectSticker={(st) => {
@@ -421,7 +379,6 @@ export default function App() {
         onClose={() => setIsStickerPickerOpen(false)}
       />
 
-      {/* Coloring Page Selector Modal */}
       <PageSelector
         currentPageId={currentPage.id}
         onSelectPage={handleSelectPage}

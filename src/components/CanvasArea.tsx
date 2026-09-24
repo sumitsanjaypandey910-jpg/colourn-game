@@ -28,7 +28,6 @@ export const CanvasArea: React.FC<CanvasAreaProps> = ({
   brushSize,
   selectedSticker,
   svgFills,
-  onSvgFillChange,
   strokes,
   onStrokesChange,
   stickers,
@@ -37,6 +36,9 @@ export const CanvasArea: React.FC<CanvasAreaProps> = ({
   svgRef,
   canvasRef,
 }) => {
+  const outerWrapperRef = useRef<HTMLDivElement>(null);
+  const [canvasDimensions, setCanvasDimensions] = useState<{ width: number; height: number }>({ width: 0, height: 0 });
+
   const [isDrawing, setIsDrawing] = useState(false);
   const [currentStroke, setCurrentStroke] = useState<DrawingStroke | null>(null);
   const [rainbowHue, setRainbowHue] = useState(0);
@@ -46,6 +48,41 @@ export const CanvasArea: React.FC<CanvasAreaProps> = ({
   // Dragging sticker state
   const [draggingStickerId, setDraggingStickerId] = useState<string | null>(null);
   const dragStartRef = useRef<{ startX: number; startY: number; initStickerX: number; initStickerY: number } | null>(null);
+
+  // ResizeObserver to calculate the largest 4:3 box that fits inside available space
+  useEffect(() => {
+    const updateSize = () => {
+      if (!outerWrapperRef.current) return;
+      const { clientWidth, clientHeight } = outerWrapperRef.current;
+      if (!clientWidth || !clientHeight) return;
+
+      const targetRatio = 800 / 600; // 4:3
+      let w = clientWidth;
+      let h = clientWidth / targetRatio;
+
+      if (h > clientHeight) {
+        h = clientHeight;
+        w = clientHeight * targetRatio;
+      }
+
+      setCanvasDimensions({
+        width: Math.floor(w),
+        height: Math.floor(h),
+      });
+    };
+
+    updateSize();
+    const observer = new ResizeObserver(updateSize);
+    if (outerWrapperRef.current) {
+      observer.observe(outerWrapperRef.current);
+    }
+    window.addEventListener('resize', updateSize);
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('resize', updateSize);
+    };
+  }, []);
 
   // Sparkle burst effect at click location
   const triggerSparkleBurst = (x: number, y: number) => {
@@ -150,51 +187,49 @@ export const CanvasArea: React.FC<CanvasAreaProps> = ({
 
   // Drawing event handlers
   const handlePointerDown = (e: React.PointerEvent) => {
-    // If clicking on a sticker while not in sticker tool, we can select/drag it
-    if (draggingStickerId) return;
-
     const coords = getCanvasCoordinates(e);
 
     if (activeTool === 'sticker' && selectedSticker) {
       sounds.playStickerStamp();
       const newSticker: PlacedSticker = {
-        id: `sticker-${Date.now()}-${Math.random()}`,
+        id: `st-${Date.now()}-${Math.random()}`,
         emoji: selectedSticker.emoji,
         name: selectedSticker.name,
         x: coords.x,
         y: coords.y,
-        size: 54,
-        rotation: Math.floor(Math.random() * 20) - 10,
+        rotation: 0,
+        size: 74,
       };
       onStickersChange([...stickers, newSticker]);
-      setSelectedStickerId(newSticker.id);
       triggerSparkleBurst(coords.x, coords.y);
       return;
     }
 
-    // Freehand drawing tools: brush, rainbow, sparkle, eraser
-    setIsDrawing(true);
-    let strokeColor = selectedColor;
+    if (activeTool === 'brush' || activeTool === 'rainbow' || activeTool === 'sparkle' || activeTool === 'eraser') {
+      setIsDrawing(true);
+      (e.target as HTMLElement).setPointerCapture(e.pointerId);
 
-    if (activeTool === 'rainbow') {
-      strokeColor = `hsl(${rainbowHue}, 90%, 55%)`;
-      setRainbowHue((prev) => (prev + 30) % 360);
-    } else if (activeTool === 'sparkle') {
-      strokeColor = '#FBBF24';
-      sounds.playSparkle();
+      let strokeColor = selectedColor;
+      if (activeTool === 'rainbow') {
+        strokeColor = `hsl(${rainbowHue}, 95%, 55%)`;
+        setRainbowHue((prev) => (prev + 35) % 360);
+      } else if (activeTool === 'sparkle') {
+        strokeColor = '#FBBF24';
+      }
+
+      const initialStroke: DrawingStroke = {
+        tool: activeTool,
+        color: strokeColor,
+        size: brushSize,
+        points: [coords],
+      };
+
+      setCurrentStroke(initialStroke);
     }
-
-    const stroke: DrawingStroke = {
-      tool: activeTool,
-      color: strokeColor,
-      size: brushSize,
-      points: [coords],
-    };
-    setCurrentStroke(stroke);
   };
 
   const handlePointerMove = (e: React.PointerEvent) => {
-    // Handle sticker dragging
+    // If dragging a sticker
     if (draggingStickerId && dragStartRef.current) {
       const coords = getCanvasCoordinates(e);
       const dx = coords.x - dragStartRef.current.startX;
@@ -204,8 +239,8 @@ export const CanvasArea: React.FC<CanvasAreaProps> = ({
           st.id === draggingStickerId
             ? {
                 ...st,
-                x: Math.max(30, Math.min(770, dragStartRef.current!.initStickerX + dx)),
-                y: Math.max(30, Math.min(570, dragStartRef.current!.initStickerY + dy)),
+                x: Math.max(20, Math.min(780, dragStartRef.current!.initStickerX + dx)),
+                y: Math.max(20, Math.min(580, dragStartRef.current!.initStickerY + dy)),
               }
             : st
         )
@@ -217,38 +252,44 @@ export const CanvasArea: React.FC<CanvasAreaProps> = ({
 
     const coords = getCanvasCoordinates(e);
     const lastPoint = currentStroke.points[currentStroke.points.length - 1];
+
+    // Smooth stroke interpolation threshold
     const dist = Math.hypot(coords.x - lastPoint.x, coords.y - lastPoint.y);
+    if (dist < 2.5) return;
 
-    if (dist < 3) return; // Debounce microscopic movements
-
-    let strokeColor = currentStroke.color;
     if (currentStroke.tool === 'rainbow') {
-      strokeColor = `hsl(${rainbowHue}, 90%, 55%)`;
-      setRainbowHue((prev) => (prev + 12) % 360);
+      const newHue = (rainbowHue + 15) % 360;
+      setRainbowHue(newHue);
     }
 
-    setCurrentStroke({
-      ...currentStroke,
-      color: strokeColor,
-      points: [...currentStroke.points, coords],
+    setCurrentStroke((prev) => {
+      if (!prev) return null;
+      return {
+        ...prev,
+        points: [...prev.points, coords],
+      };
     });
   };
 
-  const handlePointerUp = () => {
+  const handlePointerUp = (e: React.PointerEvent) => {
     if (draggingStickerId) {
       setDraggingStickerId(null);
       dragStartRef.current = null;
     }
 
     if (isDrawing && currentStroke) {
+      try {
+        (e.target as HTMLElement).releasePointerCapture(e.pointerId);
+      } catch {
+        // ignore if not captured
+      }
+      setIsDrawing(false);
       onStrokesChange([...strokes, currentStroke]);
       setCurrentStroke(null);
-      setIsDrawing(false);
     }
   };
 
-  // Sticker actions
-  const handleDeleteSticker = (id: string) => {
+  const handleRemoveSticker = (id: string) => {
     sounds.playSwoosh();
     onStickersChange(stickers.filter((s) => s.id !== id));
     if (selectedStickerId === id) setSelectedStickerId(null);
@@ -278,124 +319,136 @@ export const CanvasArea: React.FC<CanvasAreaProps> = ({
 
   return (
     <div
-      id="coloring-canvas-wrapper"
-      className="relative w-full max-w-4xl mx-auto aspect-[4/3] bg-white rounded-3xl shadow-xl border-4 border-amber-300 overflow-hidden select-none touch-none cursor-crosshair transition-all"
+      ref={outerWrapperRef}
+      id="coloring-canvas-outer"
+      className="flex-1 min-w-0 min-h-0 w-full h-full flex items-center justify-center relative p-0.5 sm:p-1 overflow-hidden"
     >
       <div
-        ref={canvasContainerRef}
-        id="interactive-stage"
-        className="relative w-full h-full"
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerUp}
-        onPointerLeave={handlePointerUp}
+        id="coloring-canvas-wrapper"
+        style={{
+          width: canvasDimensions.width ? `${canvasDimensions.width}px` : '100%',
+          height: canvasDimensions.height ? `${canvasDimensions.height}px` : '100%',
+        }}
+        className="relative bg-white rounded-2xl sm:rounded-3xl shadow-lg border-2 sm:border-4 border-amber-300 overflow-hidden select-none touch-none cursor-crosshair transition-all shrink-0"
       >
-        {/* Layer 1: Base SVG Line Art - 100% colourless outlines ready for player coloring */}
-        <svg
-          ref={svgRef}
-          id="coloring-svg-layer"
-          viewBox={page.viewBox}
-          className="absolute inset-0 w-full h-full pointer-events-none select-none"
-          preserveAspectRatio="xMidYMid meet"
+        <div
+          ref={canvasContainerRef}
+          id="interactive-stage"
+          className="relative w-full h-full"
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+          onPointerLeave={handlePointerUp}
         >
-          {page.renderSvg(svgFills)}
-        </svg>
+          {/* Layer 1: Base SVG Line Art - 100% colourless outlines ready for player coloring */}
+          <svg
+            ref={svgRef}
+            id="coloring-svg-layer"
+            viewBox={page.viewBox}
+            className="absolute inset-0 w-full h-full pointer-events-none select-none"
+            preserveAspectRatio="xMidYMid meet"
+          >
+            {page.renderSvg(svgFills)}
+          </svg>
 
-        {/* Layer 2: Freehand Drawing HTML5 Canvas */}
-        <canvas
-          ref={canvasRef}
-          id="freehand-drawing-canvas"
-          width={800}
-          height={600}
-          className="absolute inset-0 w-full h-full pointer-events-none mix-blend-multiply"
-        />
+          {/* Layer 2: Freehand Drawing HTML5 Canvas */}
+          <canvas
+            ref={canvasRef}
+            id="freehand-drawing-canvas"
+            width={800}
+            height={600}
+            className="absolute inset-0 w-full h-full pointer-events-none mix-blend-multiply"
+          />
 
-        {/* Layer 3: Interactive Placed Stickers */}
-        <div id="stickers-container" className="absolute inset-0 pointer-events-none">
-          {stickers.map((st) => {
-            const isSelected = selectedStickerId === st.id;
-            return (
-              <div
-                key={st.id}
-                id={`placed-sticker-${st.id}`}
-                className="absolute pointer-events-auto group cursor-grab active:cursor-grabbing"
-                style={{
-                  left: `${(st.x / 800) * 100}%`,
-                  top: `${(st.y / 600) * 100}%`,
-                  transform: `translate(-50%, -50%) rotate(${st.rotation}deg)`,
-                }}
-                onPointerDown={(e) => {
-                  e.stopPropagation();
-                  setSelectedStickerId(st.id);
-                  setDraggingStickerId(st.id);
-                  const coords = getCanvasCoordinates(e);
-                  dragStartRef.current = {
-                    startX: coords.x,
-                    startY: coords.y,
-                    initStickerX: st.x,
-                    initStickerY: st.y,
-                  };
-                }}
-              >
+          {/* Layer 3: Interactive Placed Stickers */}
+          <div id="stickers-container" className="absolute inset-0 pointer-events-none">
+            {stickers.map((st) => {
+              const isSelected = selectedStickerId === st.id;
+              return (
                 <div
-                  className={`relative flex items-center justify-center select-none transition-transform ${
-                    isSelected ? 'ring-2 ring-amber-500 rounded-2xl p-1 bg-amber-100/30 shadow-md' : 'hover:scale-110'
-                  }`}
-                  style={{ fontSize: `${st.size}px`, lineHeight: 1 }}
+                  key={st.id}
+                  id={`placed-sticker-${st.id}`}
+                  className="absolute pointer-events-auto group cursor-grab active:cursor-grabbing"
+                  style={{
+                    left: `${(st.x / 800) * 100}%`,
+                    top: `${(st.y / 600) * 100}%`,
+                    transform: `translate(-50%, -50%) rotate(${st.rotation}deg)`,
+                  }}
+                  onPointerDown={(e) => {
+                    e.stopPropagation();
+                    setSelectedStickerId(st.id);
+                    setDraggingStickerId(st.id);
+                    const coords = getCanvasCoordinates(e);
+                    dragStartRef.current = {
+                      startX: coords.x,
+                      startY: coords.y,
+                      initStickerX: st.x,
+                      initStickerY: st.y,
+                    };
+                  }}
                 >
-                  {st.emoji}
+                  <div
+                    style={{ fontSize: `${st.size * 0.7}px` }}
+                    className={`select-none p-1 transition-transform ${
+                      isSelected
+                        ? 'ring-2 ring-amber-400 ring-dashed rounded-2xl bg-white/40'
+                        : ''
+                    }`}
+                  >
+                    {st.emoji}
+                  </div>
 
-                  {/* Sticker mini control bubble when selected */}
+                  {/* Sticker controls visible when selected */}
                   {isSelected && (
                     <div
-                      className="absolute -top-10 left-1/2 -translate-x-1/2 flex items-center gap-1 bg-white/95 backdrop-blur-sm px-2 py-1 rounded-full shadow-lg border border-amber-300 pointer-events-auto z-20"
-                      onClick={(e) => e.stopPropagation()}
+                      className="absolute -top-7 left-1/2 -translate-x-1/2 flex items-center gap-1 bg-white rounded-full px-2 py-0.5 shadow-md border border-amber-300 pointer-events-auto z-20"
+                      onPointerDown={(e) => e.stopPropagation()}
                     >
                       <button
                         type="button"
                         onClick={() => handleRotateSticker(st.id)}
-                        className="p-1 rounded-full hover:bg-amber-100 text-amber-800"
-                        title="Rotate Sticker"
+                        className="p-1 hover:text-amber-600 text-slate-700"
+                        title="Rotate"
                       >
                         <RotateCw className="w-3.5 h-3.5" />
                       </button>
                       <button
                         type="button"
                         onClick={() => handleResizeSticker(st.id)}
-                        className="p-1 rounded-full hover:bg-amber-100 text-amber-800 text-[11px] font-black"
+                        className="p-1 hover:text-amber-600 text-slate-700"
                         title="Change Size"
                       >
-                        Aa
+                        <Sparkles className="w-3.5 h-3.5" />
                       </button>
                       <button
                         type="button"
-                        onClick={() => handleDeleteSticker(st.id)}
-                        className="p-1 rounded-full hover:bg-rose-100 text-rose-600"
-                        title="Remove Sticker"
+                        onClick={() => handleRemoveSticker(st.id)}
+                        className="p-1 hover:text-rose-600 text-slate-700"
+                        title="Delete"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
                     </div>
                   )}
                 </div>
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Sparkle Burst Animation Overlay */}
-        {sparkleBursts.map((sb) => (
-          <div
-            key={sb.id}
-            className="absolute pointer-events-none -translate-x-1/2 -translate-y-1/2 animate-ping text-amber-400"
-            style={{
-              left: `${(sb.x / 800) * 100}%`,
-              top: `${(sb.y / 600) * 100}%`,
-            }}
-          >
-            <Sparkles className="w-9 h-9 text-amber-400 drop-shadow-md" />
+              );
+            })}
           </div>
-        ))}
+
+          {/* Layer 4: Sparkle Bursts Animation */}
+          {sparkleBursts.map((b) => (
+            <div
+              key={b.id}
+              className="absolute pointer-events-none transform -translate-x-1/2 -translate-y-1/2 animate-ping"
+              style={{
+                left: `${(b.x / 800) * 100}%`,
+                top: `${(b.y / 600) * 100}%`,
+              }}
+            >
+              <span className="text-xl sm:text-2xl">✨</span>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

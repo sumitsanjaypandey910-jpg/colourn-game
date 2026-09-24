@@ -30,35 +30,38 @@ export const ColorPalette: React.FC<ColorPaletteProps> = ({
   selectedColor,
   onSelectColor,
 }) => {
-  const activeColorObj = COLOR_OPTIONS.find(c => c.value.toLowerCase() === selectedColor.toLowerCase()) || {
+  const activeColorObj = COLOR_OPTIONS.find(
+    (c) => c.value.toLowerCase() === selectedColor.toLowerCase()
+  ) || {
     name: 'Custom Magic',
     value: selectedColor,
   };
 
   return (
-    <div id="color-palette-container" className="bg-white/90 backdrop-blur-sm rounded-2xl p-3 sm:p-4 shadow-md border-2 border-amber-200">
-      {/* Active Color Name Pill */}
-      <div className="flex items-center justify-between mb-2.5 px-1">
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-bold uppercase tracking-wider text-amber-900/70">
-            Current Crayon:
+    <div
+      id="color-palette-dock"
+      className="w-18 sm:w-22 md:w-24 h-full flex flex-col justify-between bg-white/95 backdrop-blur-sm rounded-xl sm:rounded-2xl p-1 sm:p-1.5 border-2 border-amber-200 shadow-sm shrink-0 select-none overflow-hidden"
+    >
+      {/* Active Crayon Swatch Banner */}
+      <div className="flex flex-col items-center justify-center pb-1 border-b border-amber-200/90 shrink-0">
+        <span className="text-[9px] font-black text-amber-800 uppercase tracking-wider leading-none mb-1">
+          Color
+        </span>
+        <div className="flex items-center gap-1">
+          <div
+            className="w-4 h-4 sm:w-5 sm:h-5 rounded-full border-2 border-black/20 shadow-xs inline-block"
+            style={{ backgroundColor: selectedColor }}
+          />
+          <span className="text-[10px] sm:text-xs font-black text-amber-950 truncate max-w-[45px] sm:max-w-[55px]">
+            {activeColorObj.name.split(' ')[0]}
           </span>
-          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-100/80 border border-amber-300">
-            <span
-              className="w-3.5 h-3.5 rounded-full shadow-inner border border-black/15 inline-block"
-              style={{ backgroundColor: selectedColor }}
-            />
-            <span className="text-xs sm:text-sm font-black text-amber-950">
-              {activeColorObj.name}
-            </span>
-          </div>
         </div>
       </div>
 
-      {/* Crayon / Paint Pot Grid */}
-      <div 
-        id="crayons-scroll-row"
-        className="flex items-center gap-2 overflow-x-auto pb-1.5 pt-1 px-1 scrollbar-thin scrollbar-thumb-amber-300"
+      {/* 2-Column Grid of All 16 Colors (NO SCROLLING - always 100% visible on screen) */}
+      <div
+        id="color-crayons-grid"
+        className="grid grid-cols-2 gap-1 sm:gap-1.5 flex-1 min-h-0 py-1 items-center justify-items-center overflow-hidden"
       >
         {COLOR_OPTIONS.map((c, index) => {
           const isSelected = selectedColor.toLowerCase() === c.value.toLowerCase();
@@ -72,45 +75,36 @@ export const ColorPalette: React.FC<ColorPaletteProps> = ({
                 sounds.playColorPick(index);
                 onSelectColor(c.value);
               }}
-              className={`group relative flex-shrink-0 flex flex-col items-center focus:outline-none transition-all duration-200 ${
-                isSelected ? '-translate-y-1.5 scale-110' : 'hover:-translate-y-0.5 hover:scale-105'
+              className={`relative flex items-center justify-center w-6.5 h-6.5 sm:w-8 sm:h-8 md:w-8.5 md:h-8.5 rounded-full transition-transform active:scale-90 focus:outline-none ${
+                isSelected
+                  ? 'scale-115 ring-2 sm:ring-3 ring-amber-500 ring-offset-1 sm:ring-offset-2 z-10 shadow-md'
+                  : 'hover:scale-105 shadow-2xs'
               }`}
+              style={{
+                backgroundColor: c.value,
+                border: c.border ? `2px solid ${c.border}` : '1.5px solid rgba(0,0,0,0.18)',
+              }}
+              title={c.name}
             >
-              {/* Crayon Tip (Triangle) */}
-              <div
-                className="w-3 h-3 sm:w-3.5 sm:h-3.5 -mb-1 rotate-45 rounded-xs transition-transform"
-                style={{
-                  backgroundColor: c.value,
-                  borderTop: c.border ? `1px solid ${c.border}` : '1px solid rgba(0,0,0,0.15)',
-                  borderLeft: c.border ? `1px solid ${c.border}` : '1px solid rgba(0,0,0,0.15)',
-                }}
-              />
-              
-              {/* Crayon Body */}
-              <div
-                className={`w-7 sm:w-8.5 h-11 sm:h-13 rounded-t-sm rounded-b-md shadow-sm flex flex-col justify-between items-center py-1 transition-all ${
-                  isSelected
-                    ? 'ring-3 ring-amber-500 ring-offset-2 shadow-lg'
-                    : 'hover:shadow-md'
-                }`}
-                style={{
-                  backgroundColor: c.value,
-                  border: c.border ? `2px solid ${c.border}` : '1px solid rgba(0,0,0,0.15)',
-                }}
-              >
-                {/* Decorative Crayon Paper Label Stripe */}
-                <div className="w-full h-2.5 bg-black/15 my-auto" />
-              </div>
+              {/* Inner highlight ring */}
+              <div className="w-full h-full rounded-full bg-gradient-to-tr from-black/10 via-transparent to-white/40 pointer-events-none" />
 
-              {/* Selection Star indicator */}
+              {/* Sparkle badge on selected color */}
               {isSelected && (
-                <span className="absolute -top-2 -right-1 text-xs select-none animate-bounce">
+                <span className="absolute -top-1.5 -right-1 text-[10px] select-none pointer-events-none animate-bounce">
                   ✨
                 </span>
               )}
             </button>
           );
         })}
+      </div>
+
+      {/* Bottom Hint */}
+      <div className="pt-0.5 border-t border-amber-200/90 text-center shrink-0">
+        <span className="text-[9px] font-black text-amber-700/80 leading-none">
+          16 Colors
+        </span>
       </div>
     </div>
   );
