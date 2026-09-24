@@ -276,11 +276,11 @@ export default function App() {
   return (
     <div
       id="coloring-app-root"
-      className="h-screen h-[100dvh] w-screen overflow-hidden bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-100 flex flex-col p-1 sm:p-2 select-none font-sans text-amber-950"
+      className="h-screen h-[100dvh] w-screen overflow-hidden bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-100 flex flex-col p-1 sm:p-2 font-sans text-amber-950"
     >
       {/* Mobile Portrait Orientation Helper */}
       {isPortrait && showRotateTip && (
-        <div className="shrink-0 bg-amber-400 border border-amber-500 text-amber-950 px-2.5 py-1 text-xs font-black rounded-lg flex items-center justify-between mb-1 shadow-xs animate-pulse">
+        <div className="shrink-0 bg-amber-400 border border-amber-500 text-amber-950 px-2.5 py-1 text-xs font-black rounded-lg flex items-center justify-between mb-1 shadow-xs animate-pulse select-none">
           <div className="flex items-center gap-1.5 truncate">
             <span>🔄</span>
             <span className="truncate">Rotate phone sideways for the BIGGEST coloring canvas!</span>
@@ -321,7 +321,7 @@ export default function App() {
       {/* Main Horizontal Game Stage: Left Tools + Center Big Canvas + Right Colors */}
       <div
         id="game-horizontal-stage"
-        className="flex-1 min-h-0 w-full flex flex-row items-stretch gap-1 sm:gap-2 mt-1 sm:mt-1.5 overflow-hidden"
+        className="flex-1 min-h-0 w-full flex flex-row items-stretch gap-1 sm:gap-2 mt-1 sm:mt-1.5 overflow-hidden select-none"
       >
         {/* Left Toolbar (Tools & Brush Sizes) */}
         <Toolbar
@@ -336,6 +336,7 @@ export default function App() {
           setBrushSize={setBrushSize}
           onOpenStickerPicker={() => setIsStickerPickerOpen(true)}
           selectedSticker={selectedSticker}
+          onOpenPageSelector={() => setIsPageSelectorOpen(true)}
         />
 
         {/* Center: Big Coloring Canvas Area */}

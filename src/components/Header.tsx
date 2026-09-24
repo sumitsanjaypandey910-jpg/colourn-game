@@ -4,7 +4,6 @@ import {
   VolumeX, 
   Download, 
   Sparkles, 
-  BookOpen, 
   Music, 
   Music2, 
   Undo2, 
@@ -59,19 +58,10 @@ export const Header: React.FC<HeaderProps> = ({
   return (
     <header
       id="app-header"
-      className="h-11 sm:h-12 w-full bg-white/95 backdrop-blur-sm px-2 sm:px-3 rounded-xl sm:rounded-2xl border-2 border-amber-200 shadow-xs flex items-center justify-between gap-1.5 sm:gap-2 shrink-0 select-none"
+      className="h-12 sm:h-13 w-full bg-white/95 backdrop-blur-sm px-2 sm:px-3 rounded-xl sm:rounded-2xl border-2 border-amber-200 shadow-xs flex items-center justify-between gap-1.5 sm:gap-2 shrink-0 select-none"
     >
-      {/* Left: Brand + Change Page Selector */}
+      {/* Left: BIG Prominent Choose Design Button */}
       <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-        <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-amber-400 via-pink-400 to-sky-400 flex items-center justify-center shadow-xs text-white text-base select-none shrink-0">
-          🎨
-        </div>
-        <div className="hidden lg:flex flex-col">
-          <span className="text-xs font-black text-amber-950 leading-tight">Kids Coloring</span>
-          <span className="text-[10px] text-amber-700 font-bold leading-none">Unlimited Fun</span>
-        </div>
-
-        {/* Change Picture Trigger Button */}
         <button
           id="btn-choose-picture"
           type="button"
@@ -79,17 +69,24 @@ export const Header: React.FC<HeaderProps> = ({
             sounds.playPop();
             onOpenPageSelector();
           }}
-          className="flex items-center gap-1 px-2 sm:px-2.5 py-1 rounded-xl bg-amber-100/90 hover:bg-amber-200 text-amber-950 text-xs font-black border border-amber-300 shadow-2xs transition-transform active:scale-95"
-          title="Pick another colouring picture"
+          className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3.5 py-1 sm:py-1.5 rounded-xl sm:rounded-2xl bg-gradient-to-r from-amber-400 via-orange-400 to-amber-500 hover:from-amber-500 hover:to-orange-500 text-amber-950 font-black border-2 border-amber-600 shadow-md transition-transform active:scale-95 hover:scale-102 cursor-pointer"
+          title="Pick another colouring design"
         >
-          <BookOpen className="w-3.5 h-3.5 text-amber-700 shrink-0" />
-          <span className="max-w-[85px] sm:max-w-[130px] truncate">{currentPageTitle}</span>
-          <ChevronDown className="w-3.5 h-3.5 text-amber-700 shrink-0" />
+          <span className="text-base sm:text-xl shrink-0">🎨</span>
+          <div className="flex flex-col text-left leading-tight">
+            <span className="text-[10px] sm:text-xs font-black uppercase tracking-wider text-amber-900">
+              More Designs
+            </span>
+            <span className="text-xs sm:text-sm font-black truncate max-w-[85px] sm:max-w-[140px] text-amber-950">
+              {currentPageTitle}
+            </span>
+          </div>
+          <ChevronDown className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-950 stroke-[3] shrink-0 ml-0.5" />
         </button>
       </div>
 
       {/* Middle: Kid-friendly status / Objective Pill */}
-      <div className="hidden md:flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-50 border border-amber-300 text-amber-950 text-xs font-bold shadow-2xs truncate">
+      <div className="hidden lg:flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 border border-amber-300 text-amber-950 text-xs font-bold shadow-2xs truncate">
         <span>{isColourless ? '🎯 Objective: Start colourless & color freely!' : `🌟 ${strokesCount} crayon strokes painted!`}</span>
       </div>
 
@@ -212,7 +209,7 @@ export const Header: React.FC<HeaderProps> = ({
           id="btn-celebrate"
           type="button"
           onClick={onCelebrate}
-          className="flex items-center gap-1 px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-xl bg-gradient-to-r from-pink-500 to-amber-500 hover:from-pink-600 hover:to-amber-600 text-white text-xs font-black shadow-xs transition-transform hover:scale-105 active:scale-95 animate-pulse"
+          className="flex items-center gap-1 px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-xl bg-gradient-to-r from-pink-500 to-amber-500 hover:from-pink-600 hover:to-amber-600 text-white text-xs font-black shadow-xs transition-transform hover:scale-105 active:scale-95"
           title="Tada! Confetti celebration!"
         >
           <Sparkles className="w-3.5 h-3.5 text-yellow-200" />

@@ -2,7 +2,7 @@ import React from 'react';
 import { COLORING_PAGES } from '../data/coloringPages';
 import { ColoringPage } from '../types';
 import { sounds } from '../utils/audio';
-import { X, Sparkles } from 'lucide-react';
+import { X, Sparkles, Check, ArrowRight } from 'lucide-react';
 
 interface PageSelectorProps {
   currentPageId: string;
@@ -22,25 +22,31 @@ export const PageSelector: React.FC<PageSelectorProps> = ({
   return (
     <div
       id="page-selector-modal"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs animate-in fade-in duration-150"
+      className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-150 overflow-y-auto"
       onClick={onClose}
     >
       <div
         id="page-selector-card"
-        className="bg-amber-50/95 rounded-3xl p-5 sm:p-7 max-w-3xl w-full shadow-2xl border-4 border-amber-300 max-h-[90vh] flex flex-col"
+        className="bg-amber-50 rounded-2xl sm:rounded-3xl p-3 sm:p-4 max-w-3xl w-full shadow-2xl border-3 sm:border-4 border-amber-300 max-h-[95vh] sm:max-h-[90vh] flex flex-col my-auto relative"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between pb-3 border-b-2 border-amber-200">
+        {/* Compact Header - Saves vertical space on landscape phones */}
+        <div className="flex items-center justify-between pb-2 sm:pb-2.5 border-b-2 border-amber-200 shrink-0">
           <div className="flex items-center gap-2">
-            <span className="p-2 bg-amber-200 rounded-2xl text-amber-900 text-xl">
+            <span className="w-8 h-8 sm:w-9 sm:h-9 bg-gradient-to-tr from-amber-400 to-orange-400 rounded-xl text-white text-base sm:text-lg flex items-center justify-center shadow-2xs shrink-0">
               🎨
             </span>
             <div>
-              <h2 className="text-xl sm:text-2xl font-black text-amber-950">
-                Choose a Coloring Page!
-              </h2>
-              <p className="text-xs sm:text-sm font-semibold text-amber-800">
-                Pick your favorite adventure! All pages start colourless for unlimited creative coloring.
+              <div className="flex items-center gap-2">
+                <h2 className="text-base sm:text-lg font-black text-amber-950 leading-tight">
+                  Choose a Coloring Page!
+                </h2>
+                <span className="text-[10px] font-black uppercase tracking-wider bg-amber-200/90 text-amber-900 px-1.5 py-0.5 rounded-full border border-amber-300">
+                  {COLORING_PAGES.length} Designs
+                </span>
+              </div>
+              <p className="text-[11px] sm:text-xs font-bold text-amber-800 leading-tight">
+                Pick any picture to start coloring with crayons and stickers!
               </p>
             </div>
           </div>
@@ -48,14 +54,19 @@ export const PageSelector: React.FC<PageSelectorProps> = ({
             id="close-page-selector-btn"
             type="button"
             onClick={onClose}
-            className="p-2 rounded-full hover:bg-amber-200 text-slate-500 hover:text-slate-800 transition-colors"
+            className="w-8 h-8 rounded-xl bg-amber-200/70 hover:bg-amber-300 text-amber-950 flex items-center justify-center transition-colors shadow-2xs shrink-0"
+            title="Close"
           >
-            <X className="w-6 h-6" />
+            <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Grid of Pages */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 py-4 overflow-y-auto pr-1">
+        {/* Scrollable Grid of Pages: flex-1 min-h-0 with touch-pan-y and smooth scrolling */}
+        <div
+          id="page-selector-scroll-list"
+          className="flex-1 min-h-0 overflow-y-auto overscroll-contain touch-pan-y py-2 pr-1 space-y-2 sm:space-y-0 sm:grid sm:grid-cols-2 gap-2.5"
+          style={{ WebkitOverflowScrolling: 'touch' }}
+        >
           {COLORING_PAGES.map((page) => {
             const isCurrent = page.id === currentPageId;
             return (
@@ -68,51 +79,61 @@ export const PageSelector: React.FC<PageSelectorProps> = ({
                   onSelectPage(page);
                   onClose();
                 }}
-                className={`group text-left p-4 rounded-2xl border-3 transition-all duration-200 flex flex-col justify-between bg-white relative overflow-hidden ${
+                className={`group w-full text-left p-2 sm:p-2.5 rounded-xl sm:rounded-2xl border-2 sm:border-3 transition-all duration-150 flex items-center gap-2.5 sm:gap-3 bg-white relative shrink-0 min-h-[68px] sm:min-h-[76px] cursor-pointer active:scale-[0.98] ${
                   isCurrent
-                    ? 'border-amber-500 ring-4 ring-amber-400/40 shadow-lg scale-102'
-                    : 'border-amber-200 hover:border-amber-400 hover:shadow-md hover:scale-102'
+                    ? 'border-amber-500 ring-2 sm:ring-3 ring-amber-400/50 shadow-md bg-amber-50/70'
+                    : 'border-amber-200 hover:border-amber-400 hover:bg-amber-50/40 hover:shadow-xs'
                 }`}
               >
-                {isCurrent && (
-                  <span className="absolute top-2 right-2 bg-amber-400 text-amber-950 text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1 shadow-xs">
-                    <Sparkles className="w-3 h-3" /> Now Playing
-                  </span>
-                )}
+                {/* Large Thumbnail Emoji/Icon */}
+                <div className="w-11 h-11 sm:w-13 sm:h-13 rounded-xl bg-gradient-to-br from-amber-100 to-amber-200/70 flex items-center justify-center text-2xl sm:text-3xl shrink-0 group-hover:scale-105 transition-transform shadow-2xs border border-amber-200">
+                  {page.thumbnailSvg}
+                </div>
 
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="w-12 h-12 rounded-2xl bg-amber-100 flex items-center justify-center text-3xl group-hover:scale-110 transition-transform">
-                    {page.thumbnailSvg}
-                  </div>
-                  <div>
-                    <h3 className="font-black text-slate-900 text-base leading-snug group-hover:text-amber-700">
+                {/* Details */}
+                <div className="flex-1 min-w-0 flex flex-col justify-center">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <h3 className="font-black text-slate-900 text-xs sm:text-sm leading-tight group-hover:text-amber-800 truncate">
                       {page.title}
                     </h3>
-                    <span className="text-[11px] font-bold uppercase tracking-wider text-amber-600">
+                    <span className="text-[9px] font-extrabold uppercase tracking-wider text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded border border-amber-200/70">
                       {page.category}
                     </span>
                   </div>
+                  <p className="text-[11px] text-slate-500 font-semibold line-clamp-1 mt-0.5">
+                    {page.description}
+                  </p>
                 </div>
 
-                <p className="text-xs text-slate-600 font-medium line-clamp-2 mt-1">
-                  {page.description}
-                </p>
-
-                <div className="mt-3 pt-2 border-t border-amber-100 flex items-center justify-between text-xs font-bold text-amber-700">
-                  <span>Start Coloring</span>
-                  <span className="group-hover:translate-x-1 transition-transform">➔</span>
+                {/* Status Indicator Button */}
+                <div className="shrink-0 flex items-center">
+                  {isCurrent ? (
+                    <span className="px-2 sm:px-2.5 py-1 rounded-xl bg-amber-400 text-amber-950 font-black text-[11px] sm:text-xs flex items-center gap-1 border border-amber-500 shadow-2xs">
+                      <Check className="w-3.5 h-3.5 stroke-[3]" />
+                      <span className="hidden sm:inline">Playing</span>
+                    </span>
+                  ) : (
+                    <span className="px-2.5 sm:px-3 py-1 rounded-xl bg-amber-100 group-hover:bg-amber-400 text-amber-900 group-hover:text-amber-950 font-black text-[11px] sm:text-xs border border-amber-300 transition-colors flex items-center gap-1">
+                      <span>Color</span>
+                      <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+                    </span>
+                  )}
                 </div>
               </button>
             );
           })}
         </div>
 
-        <div className="pt-3 border-t-2 border-amber-200 flex justify-end">
+        {/* Compact Footer */}
+        <div className="pt-2 sm:pt-2.5 border-t-2 border-amber-200 flex items-center justify-between shrink-0">
+          <span className="text-[11px] font-bold text-amber-800/80 truncate pr-2 hidden sm:inline">
+            ✨ All pages start colourless for unlimited creativity!
+          </span>
           <button
             id="done-page-selector-btn"
             type="button"
             onClick={onClose}
-            className="px-6 py-2.5 rounded-full font-bold text-sm bg-amber-400 hover:bg-amber-500 text-amber-950 shadow-sm transition-transform active:scale-95"
+            className="ml-auto px-5 py-1.5 sm:py-2 rounded-full font-black text-xs sm:text-sm bg-amber-400 hover:bg-amber-500 text-amber-950 shadow-xs transition-transform active:scale-95"
           >
             Keep Coloring
           </button>

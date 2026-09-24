@@ -17,6 +17,7 @@ interface ToolbarProps {
   setBrushSize: (size: BrushSize) => void;
   onOpenStickerPicker: () => void;
   selectedSticker: StickerItem | null;
+  onOpenPageSelector?: () => void;
   onUndo?: () => void;
   onRedo?: () => void;
   canUndo?: boolean;
@@ -38,6 +39,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
   setBrushSize,
   onOpenStickerPicker,
   selectedSticker,
+  onOpenPageSelector,
 }) => {
   return (
     <div
@@ -46,6 +48,23 @@ export const Toolbar: React.FC<ToolbarProps> = ({
     >
       {/* Primary Drawing Tool Buttons */}
       <div id="drawing-tools-group" className="flex flex-col items-center gap-1.5 w-full">
+        {/* Big Change Page / Designs Trigger */}
+        {onOpenPageSelector && (
+          <button
+            id="toolbar-open-pages-btn"
+            type="button"
+            onClick={() => {
+              sounds.playPop();
+              onOpenPageSelector();
+            }}
+            className="w-full aspect-square max-w-[42px] max-h-[42px] rounded-xl flex flex-col items-center justify-center bg-gradient-to-tr from-amber-400 via-orange-400 to-amber-500 text-amber-950 border-2 border-amber-600 shadow-xs hover:scale-105 active:scale-95 transition-all font-black mb-0.5"
+            title="Choose more coloring pages"
+          >
+            <span className="text-sm leading-none">📖</span>
+            <span className="text-[8px] sm:text-[9px] font-black leading-none mt-0.5">Pages</span>
+          </button>
+        )}
+
         {/* Crayon Brush */}
         <button
           id="tool-brush-btn"

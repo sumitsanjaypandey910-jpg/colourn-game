@@ -61,7 +61,7 @@ export const ColorPalette: React.FC<ColorPaletteProps> = ({
       {/* 2-Column Grid of All 16 Colors (NO SCROLLING - always 100% visible on screen) */}
       <div
         id="color-crayons-grid"
-        className="grid grid-cols-2 gap-1 sm:gap-1.5 flex-1 min-h-0 py-1 items-center justify-items-center overflow-hidden"
+        className="grid grid-cols-2 gap-0.5 sm:gap-1.5 flex-1 min-h-0 py-0.5 sm:py-1 items-center justify-items-center content-evenly overflow-hidden"
       >
         {COLOR_OPTIONS.map((c, index) => {
           const isSelected = selectedColor.toLowerCase() === c.value.toLowerCase();
